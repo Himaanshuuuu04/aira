@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AIRA Dashboard
+
+AIRA is a modern, responsive operations dashboard built with Next.js. It features a high fidelity layout, rich status cards, and an interactive right sidebar with snapshot metrics and trend visualization.
+
+## Features
+
+- Responsive dashboard layout with sticky header and adaptive sidebar.
+- Interactive filter tabs and status sections for blocked, slowing, and stable signals.
+- Trend area chart and snapshot widgets in the right sidebar.
+- Polished UI styling with Tailwind CSS and Lucide icons.
+
+## Tech Stack
+
+- Next.js (App Router)
+- React
+- Tailwind CSS
+- Recharts
+- Lucide Icons
+
+## Project Structure
+
+- `app/` App Router pages and global styles.
+- `components/` Layout, header, signal cards, and sidebar.
+- `components/ui/` UI primitives (buttons, badges, cards, inputs).
+- `lib/` Utilities.
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 to view the dashboard.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `npm run dev` Start the development server.
+- `npm run build` Build for production.
+- `npm run start` Start the production server.
+- `npm run lint` Run ESLint.
 
-## Learn More
+## Customization
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Update content and layout in `components/`.
+- Adjust global styles in `app/globals.css`.
+- Modify data sets and UI labels directly in component files.
