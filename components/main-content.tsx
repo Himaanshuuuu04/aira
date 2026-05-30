@@ -1,27 +1,81 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+import { useSelector } from "react-redux";
 import {
   Filter,
-  Layers,
   Speaker,
   Shield,
   Code,
   Scale,
   CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SignalCard } from "./signal-card";
+import { selectJasoDashboard, type SignalCardData } from "@/lib/jasoSlice";
 
 type FilterType = "all" | "attention" | "slowing" | "stable";
 
+const sectionAccentStyles = {
+  red: "text-red-500",
+  orange: "text-orange-400",
+  emerald: "text-emerald-500",
+} as const;
+
+const iconMap: Record<SignalCardData["iconKey"], ReactNode> = {
+  speaker: <Speaker className="w-6 h-6" />,
+  shield: <Shield className="w-6 h-6" />,
+  code: <Code className="w-6 h-6" />,
+  scale: <Scale className="w-6 h-6 text-white" />,
+  check: (
+    <CheckCircle2 className="w-6 h-6 text-emerald-500 bg-white rounded-xl" />
+  ),
+};
+
 export function MainContent() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const { operationalHealth, signalSections } =
+    useSelector(selectJasoDashboard);
+
+  const toggleSection = (id: string) => {
+    setCollapsedSections((s) => ({ ...s, [id]: !s[id] }));
+  };
+
+  const counts = signalSections.reduce(
+    (accumulator, section) => {
+      accumulator[section.id] = section.count;
+      accumulator.total += section.count;
+      return accumulator;
+    },
+    {
+      blocked: 0,
+      slowing: 0,
+      stable: 0,
+      total: 0,
+    },
+  );
+
+  const visibleSections = signalSections.filter((section) => {
+    if (activeFilter === "all") {
+      return true;
+    }
+
+    if (activeFilter === "attention") {
+      return section.id === "blocked";
+    }
+
+    if (activeFilter === "slowing") {
+      return section.id === "slowing";
+    }
+
+    return section.id === "stable";
+  });
 
   return (
-    <div className="flex flex-col w-full h-full min-w-0">
-      {/* Tabs / Filters Section */}
+    <div className="flex flex-col w-full h-full min-w-0 mt-10 md:mt-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none snap-x whitespace-nowrap">
           <Button
@@ -35,18 +89,18 @@ export function MainContent() {
                 activeFilter === "attention" ? "all" : "attention",
               )
             }
-            className={`rounded-full gap-2 snap-start shrink-0 ${
+            className={`rounded-xl gap-2 snap-start shrink-0 border ${
               activeFilter === "attention" || activeFilter === "all"
-                ? "bg-blue-50 text-blue-700 font-semibold border border-blue-100"
-                : "font-medium text-gray-600 border-transparent bg-white shadow-sm"
+                ? "bg-blue-50 text-blue-700 font-semibold border-blue-100"
+                : "font-medium text-gray-600 border-gray-200 bg-white"
             }`}
           >
-            Needs Attention{" "}
+            Needs Attention
             <Badge
               variant="destructive"
               className="bg-[#E0556E] text-white border-0"
             >
-              1
+              {counts.blocked}
             </Badge>
           </Button>
           <Button
@@ -54,18 +108,18 @@ export function MainContent() {
             onClick={() =>
               setActiveFilter(activeFilter === "slowing" ? "all" : "slowing")
             }
-            className={`rounded-full gap-2 snap-start shrink-0 ${
+            className={`rounded-xl gap-2 snap-start shrink-0 border ${
               activeFilter === "slowing"
-                ? "bg-orange-50 text-orange-700 font-semibold border border-orange-100"
-                : "font-medium text-gray-600 border-transparent bg-white shadow-sm"
+                ? "border-gray-500 bg-orange-50 text-orange-700 font-semibold"
+                : "font-medium text-gray-600 border-gray-200 bg-white"
             }`}
           >
-            Slowing Down{" "}
+            Slowing Down
             <Badge
               variant="warning"
               className="bg-[#F39B3D] text-white border-0"
             >
-              2
+              {counts.slowing}
             </Badge>
           </Button>
           <Button
@@ -73,25 +127,25 @@ export function MainContent() {
             onClick={() =>
               setActiveFilter(activeFilter === "stable" ? "all" : "stable")
             }
-            className={`rounded-full gap-2 snap-start shrink-0 ${
+            className={`rounded-xl gap-2 snap-start shrink-0 border ${
               activeFilter === "stable"
-                ? "bg-emerald-50 text-emerald-700 font-semibold border border-emerald-100"
-                : "font-medium text-gray-600 border-transparent bg-white shadow-sm"
+                ? "bg-emerald-50 text-emerald-700 font-semibold border-emerald-100"
+                : "font-medium text-gray-600 border-gray-200 bg-white"
             }`}
           >
-            Stable / FYI{" "}
+            Stable / FYI
             <Badge
               variant="success"
               className="bg-[#53C7AE] text-white border-0"
             >
-              2
+              {counts.stable}
             </Badge>
           </Button>
         </div>
 
         <Button
           variant="outline"
-          className="rounded-full gap-2 font-medium bg-white shrink-0 self-start md:self-auto border-blue-100 text-blue-700 shadow-sm"
+          className="rounded-xl gap-2 font-medium bg-white shrink-0 self-start md:self-auto border border-blue-100 text-blue-700"
         >
           <Filter className="w-4 h-4" />
           Filters
@@ -99,126 +153,77 @@ export function MainContent() {
       </div>
 
       <div className="flex flex-col gap-6">
-        {/* Blocked Section */}
-        {(activeFilter === "all" || activeFilter === "attention") && (
-          <section>
-            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2 mb-3">
-              <span className="text-red-500">⚠️</span> BLOCKED (Requires
-              immediate action){" "}
-              <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[10px]">
-                1
-              </span>
-            </h3>
-            <div className="flex flex-col gap-3">
-              <SignalCard
-                id="1"
-                title="Backend integration may block release"
-                theme="red"
-                icon={<Speaker className="w-6 h-6" />}
-                tags={["Ryan", "Engineering"]}
-                noResponseText="No response for 6h"
-                waitingOnText="Waiting on Infra Team"
-                createdTime="15m ago"
-                lastActivityTime="6h ago"
-                badges={[{ text: "High impact", variant: "destructive" }]}
-                statusBadge={{ text: "At Risk", variant: "destructive" }}
-              />
-            </div>
-          </section>
-        )}
+        {visibleSections.map((section) => {
+          const isCollapsed = !!collapsedSections[section.id];
 
-        {/* Slowing Down Section */}
-        {(activeFilter === "all" || activeFilter === "slowing") && (
-          <section className="mt-6 pt-5 border-t border-blue-100/60">
-            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2 mb-3">
-              <span className="text-orange-400">🛡️</span> SLOWING DOWN (Monitor
-              and act soon){" "}
-              <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[10px]">
-                2
-              </span>
-            </h3>
-            <div className="flex flex-col gap-3">
-              <SignalCard
-                id="2"
-                title="Legal approval required for overnight event"
-                theme="orange"
-                icon={<Shield className="w-6 h-6" />}
-                tags={["Legal", "Finance Team"]}
-                noResponseText="No response for 3h"
-                waitingOnText="Waiting on Legal"
-                createdTime="15m ago"
-                lastActivityTime="3h ago"
-                badges={[{ text: "Medium impact", variant: "warning" }]}
-                statusBadge={{ text: "Pending", variant: "pending" }}
-              />
-              <SignalCard
-                id="3"
-                title="Budget approval for marketing campaign"
-                theme="orange"
-                icon={<Code className="w-6 h-6" />}
-                tags={["Legal", "Finance Team"]}
-                noResponseText="Multiple follow-ups"
-                waitingOnText="Waiting on Finance"
-                createdTime="15m ago"
-                lastActivityTime="2h ago"
-                badges={[{ text: "Medium impact", variant: "warning" }]}
-                statusBadge={{ text: "Pending", variant: "pending" }}
-              />
-            </div>
-          </section>
-        )}
+          return (
+            <section
+              key={section.id}
+              className="rounded-3xl border border-gray-200 bg-white p-4 md:p-5"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-bold text-gray-900 uppercase tracking-[0.24em] flex items-center gap-2">
+                    <span className={sectionAccentStyles[section.accent]}>
+                      {section.iconLabel}
+                    </span>
+                    {section.title}
+                  </h3>
+                </div>
 
-        {/* Stable / FYI Section */}
-        {(activeFilter === "all" || activeFilter === "stable") && (
-          <section className="mt-6 pt-5 border-t border-blue-100/60">
-            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2 mb-3">
-              <span className="text-emerald-500">✔️</span> STABLE / FYI (No
-              action needed){" "}
-              <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full text-[10px]">
-                2
-              </span>
-            </h3>
-            <div className="flex flex-col gap-3">
-              <SignalCard
-                id="4"
-                title="Legal approval required for overnight event"
-                theme="green"
-                icon={<Scale className="w-6 h-6 text-white" />}
-                tags={["Legal", "Finance Team"]}
-                noResponseText="Responded 2h ago"
-                waitingOnText="On track"
-                createdTime="15m ago"
-                lastActivityTime="2h ago"
-                badges={[]}
-                statusBadge={{ text: "FYI", variant: "success" }}
-              />
-              <SignalCard
-                id="5"
-                title="Homepage design approval"
-                theme="green"
-                icon={
-                  <CheckCircle2 className="w-6 h-6 text-emerald-500 bg-white rounded-full" />
-                }
-                tags={["Review Team"]}
-                noResponseText="Completed 2h ago"
-                waitingOnText="Closed"
-                createdTime="15m ago"
-                lastActivityTime="2h ago"
-                badges={[]}
-                statusBadge={{ text: "Closed", variant: "outline" }}
-              />
-            </div>
-          </section>
-        )}
+                <div className="flex items-center gap-3">
+                  <p className="text-xs text-gray-500 sm:text-right max-w-xl">
+                    {section.subtitle}
+                  </p>
+                  <button
+                    aria-expanded={!isCollapsed}
+                    onClick={() => toggleSection(section.id)}
+                    className="p-2 rounded-xl hover:bg-gray-100"
+                  >
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-150 ${
+                        isCollapsed ? "rotate-0" : "-rotate-180"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
 
-        {/* Footer info */}
-        <div className="text-xs text-gray-400 flex items-center gap-2 mt-6 pt-4 border-t border-blue-100/60 pb-8">
+              <div
+                className={`flex flex-col gap-3 transition-[max-height] duration-200 ease-in-out overflow-hidden ${
+                  isCollapsed ? "max-h-0" : "max-h-[2000px]"
+                }`}
+              >
+                {section.items.map((signal) => (
+                  <SignalCard
+                    key={signal.id}
+                    id={signal.id}
+                    title={signal.title}
+                    theme={signal.theme}
+                    icon={iconMap[signal.iconKey]}
+                    tags={signal.tags}
+                    noResponseText={signal.noResponseText}
+                    waitingOnText={signal.waitingOnText}
+                    createdTime={signal.createdTime}
+                    lastActivityTime={signal.lastActivityTime}
+                    badges={signal.badges}
+                    statusBadge={signal.statusBadge}
+                  />
+                ))}
+              </div>
+            </section>
+          );
+        })}
+
+        <div className="text-xs text-gray-400 flex flex-wrap items-center gap-2 mt-2 pt-4 border-t border-blue-100/60 pb-8">
           <span>Sort icon</span>
           <span>
             Sorted by <strong className="text-gray-600">impact</strong>
           </span>
-          <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-          <span>Showing 5 of 7 signals</span>
+          <span className="w-1 h-1 rounded-xl bg-gray-300"></span>
+          <span>
+            Showing {counts.total} of {operationalHealth.totalRecords} signals
+          </span>
         </div>
       </div>
     </div>

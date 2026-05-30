@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import {
   AlertTriangle,
   Clock,
@@ -12,30 +13,54 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResponsiveContainer, AreaChart, Area, Tooltip } from "recharts";
-
-const trendData = [
-  { day: "Mon", count: 15 },
-  { day: "Tue", count: 20 },
-  { day: "Wed", count: 12 },
-  { day: "Thu", count: 28 },
-  { day: "Fri", count: 38 },
-  { day: "Sat", count: 25 },
-  { day: "Sun", count: 18 },
-];
+import { selectJasoDashboard } from "@/lib/jasoSlice";
 
 export function RightSidebar() {
   const [snapshotView, setSnapshotView] = useState("Today");
+  const { executionSnapshot, topRisks, trendData, operationalHealth } =
+    useSelector(selectJasoDashboard);
+
+  const snapshot =
+    executionSnapshot.views[snapshotView as "Today" | "This Week"];
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      {/* Execution Snapshot */}
-      <Card className="rounded-2xl shadow-sm border-gray-100 overflow-hidden bg-white">
+      <Card className="rounded-3xl border-gray-200 bg-white overflow-hidden">
+        <CardHeader className="pb-2 pt-5 px-5">
+          <CardTitle className="text-[11px] font-bold uppercase tracking-[0.24em] text-blue-700">
+            Operational Health
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-5 pb-5">
+          <div className="flex items-end justify-between gap-4 rounded-2xl bg-linear-to-br from-blue-50 to-emerald-50 border border-blue-100/70 p-4">
+            <div>
+              <p className="text-4xl font-bold tracking-tight text-gray-900">
+                {operationalHealth.smoothPercent}%
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {operationalHealth.smoothRecords} smooth out of{" "}
+                {operationalHealth.totalRecords} records
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-gray-600">
+                Intervention
+              </p>
+              <p className="text-2xl font-bold text-rose-600">
+                {operationalHealth.interventionPercent}%
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-3xl border-gray-200 overflow-hidden bg-white">
         <CardHeader className="flex flex-row items-center justify-between pb-2 pt-5 px-5">
-          <CardTitle className="text-[11px] font-bold uppercase tracking-wider text-blue-700">
+          <CardTitle className="text-[11px] font-bold uppercase tracking-[0.24em] text-blue-700">
             Execution Snapshot
           </CardTitle>
           <span
-            className="text-[11px] text-gray-500 flex items-center cursor-pointer hover:text-gray-800"
+            className="text-[11px] text-gray-500 flex items-center cursor-pointer hover:text-gray-800 bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1"
             onClick={() =>
               setSnapshotView(snapshotView === "Today" ? "This Week" : "Today")
             }
@@ -45,22 +70,22 @@ export function RightSidebar() {
         </CardHeader>
         <CardContent className="px-5 pb-5">
           <div className="grid grid-cols-2 gap-3">
-            <div className="border border-red-100 bg-red-50/50 hover:bg-red-50 transition-colors cursor-pointer rounded-xl p-3.5">
+            <div className="border border-red-100 bg-red-50/70 hover:bg-red-50 transition-colors cursor-pointer rounded-2xl p-3.5">
               <div className="flex items-center gap-2 mb-1">
                 <AlertTriangle className="w-5 h-5 text-red-500" />
                 <span className="text-2xl leading-none font-semibold text-gray-900">
-                  {snapshotView === "Today" ? "3" : "14"}
+                  {snapshot.blocked}
                 </span>
               </div>
               <p className="text-xs font-semibold text-gray-900">Blocked</p>
               <p className="text-[11px] text-gray-500">Needs action now</p>
             </div>
 
-            <div className="border border-orange-100 bg-orange-50/50 hover:bg-orange-50 transition-colors cursor-pointer rounded-xl p-3.5">
+            <div className="border border-orange-100 bg-orange-50/70 hover:bg-orange-50 transition-colors cursor-pointer rounded-2xl p-3.5">
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="w-5 h-5 text-orange-500" />
                 <span className="text-2xl leading-none font-semibold text-gray-900">
-                  {snapshotView === "Today" ? "2" : "11"}
+                  {snapshot.slowingDown}
                 </span>
               </div>
               <p className="text-xs font-semibold text-gray-900">
@@ -69,11 +94,11 @@ export function RightSidebar() {
               <p className="text-[11px] text-gray-500">Monitor and act soon</p>
             </div>
 
-            <div className="border border-yellow-100 bg-yellow-50/50 hover:bg-yellow-50 transition-colors cursor-pointer rounded-xl p-3.5">
+            <div className="border border-yellow-100 bg-yellow-50/70 hover:bg-yellow-50 transition-colors cursor-pointer rounded-2xl p-3.5">
               <div className="flex items-center gap-2 mb-1">
                 <UserX className="w-5 h-5 text-yellow-500" />
                 <span className="text-2xl leading-none font-semibold text-gray-900">
-                  {snapshotView === "Today" ? "2" : "6"}
+                  {snapshot.missingOwner}
                 </span>
               </div>
               <p className="text-xs font-semibold text-gray-900">
@@ -82,11 +107,11 @@ export function RightSidebar() {
               <p className="text-[11px] text-gray-500">Need ownership</p>
             </div>
 
-            <div className="border border-green-100 bg-green-50/50 hover:bg-green-50 transition-colors cursor-pointer rounded-xl p-3.5">
+            <div className="border border-green-100 bg-green-50/70 hover:bg-green-50 transition-colors cursor-pointer rounded-2xl p-3.5">
               <div className="flex items-center gap-2 mb-1">
                 <CheckCircle className="w-5 h-5 text-green-500" />
                 <span className="text-2xl leading-none font-semibold text-gray-900">
-                  {snapshotView === "Today" ? "2" : "45"}
+                  {snapshot.stable}
                 </span>
               </div>
               <p className="text-xs font-semibold text-gray-900">
@@ -98,34 +123,20 @@ export function RightSidebar() {
         </CardContent>
       </Card>
 
-      {/* Top Risks */}
-      <Card className="rounded-2xl shadow-sm border-gray-100 bg-white">
+      <Card className="rounded-3xl border-gray-200 bg-white">
         <CardHeader className="pb-2 pt-5 px-5">
-          <CardTitle className="text-[11px] font-bold uppercase tracking-wider text-blue-700">
+          <CardTitle className="text-[11px] font-bold uppercase tracking-[0.24em] text-blue-700">
             Top Risks
           </CardTitle>
         </CardHeader>
         <CardContent className="px-5 pb-5 flex flex-col gap-4">
-          {[
-            {
-              title: "Backend integration may block release",
-              sub: "No response for 6h",
-            },
-            {
-              title: "Legal approval for overnight event",
-              sub: "No response for 3h",
-            },
-            {
-              title: "Budget approval for marketing campaign",
-              sub: "Multiple follow-ups",
-            },
-          ].map((risk, i) => (
+          {topRisks.map((risk, i) => (
             <div
               key={i}
               className="flex items-center justify-between group cursor-pointer"
             >
               <div className="flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-pink-500 mt-1.5 flex-shrink-0" />
+                <div className="w-2 h-2 rounded-xl bg-pink-500 mt-1.5 shrink-0" />
                 <div>
                   <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
                     {risk.title}
@@ -139,10 +150,9 @@ export function RightSidebar() {
         </CardContent>
       </Card>
 
-      {/* Trend */}
-      <Card className="rounded-2xl shadow-sm border-gray-100 bg-white">
+      <Card className="rounded-3xl border-white/80 bg-white/85">
         <CardHeader className="pb-2 pt-5 px-5">
-          <CardTitle className="text-[11px] font-bold uppercase tracking-wider text-blue-700">
+          <CardTitle className="text-[11px] font-bold uppercase tracking-[0.24em] text-blue-700">
             Trend{" "}
             <span className="text-gray-400 font-medium normal-case">
               (Last 7 days)
@@ -193,7 +203,7 @@ export function RightSidebar() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-2">
             <div className="hover:bg-red-50/50 p-2 -m-2 rounded-lg cursor-pointer transition-colors">
               <p className="text-xl font-bold text-gray-900">
-                {snapshotView === "Today" ? "12" : "34"}
+                {snapshot.blocked * 4}
               </p>
               <p className="text-[10px] text-gray-500 mb-1">Blocked</p>
               <p className="text-[10px] font-medium text-red-500 flex items-center">
@@ -202,7 +212,7 @@ export function RightSidebar() {
             </div>
             <div className="hover:bg-orange-50/50 p-2 -m-2 rounded-lg cursor-pointer transition-colors">
               <p className="text-xl font-bold text-gray-900">
-                {snapshotView === "Today" ? "18" : "41"}
+                {snapshot.slowingDown * 9}
               </p>
               <p className="text-[10px] text-gray-500 mb-1">Slowing</p>
               <p className="text-[10px] font-medium text-orange-500 flex items-center">
@@ -211,7 +221,7 @@ export function RightSidebar() {
             </div>
             <div className="hover:bg-green-50/50 p-2 -m-2 rounded-lg cursor-pointer transition-colors">
               <p className="text-xl font-bold text-gray-900">
-                {snapshotView === "Today" ? "9" : "28"}
+                {snapshot.stable * 4}
               </p>
               <p className="text-[10px] text-gray-500 mb-1">Resolved</p>
               <p className="text-[10px] font-medium text-green-500 flex items-center">
@@ -220,7 +230,7 @@ export function RightSidebar() {
             </div>
             <div className="hover:bg-gray-50/50 p-2 -m-2 rounded-lg cursor-pointer transition-colors">
               <p className="text-xl font-bold text-gray-900">
-                {snapshotView === "Today" ? "4.2h" : "3.1h"}
+                {snapshot.avgResponseTime}
               </p>
               <p className="text-[10px] text-gray-500 mb-1">
                 Avg. response time
@@ -233,10 +243,9 @@ export function RightSidebar() {
         </CardContent>
       </Card>
 
-      {/* Info Card */}
-      <Card className="rounded-2xl shadow-sm border-blue-100 bg-blue-50/30 overflow-hidden">
+      <Card className="rounded-3xl border-blue-100 bg-linear-to-br from-blue-50 to-white overflow-hidden">
         <CardContent className="p-5 flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
             <Sparkles className="w-5 h-5" />
           </div>
           <div>
