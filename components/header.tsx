@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Search, Bell, Menu } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Input } from "@/components/ui/input";
@@ -8,12 +9,21 @@ import { selectJasoDashboard } from "@/lib/jasoSlice";
 
 export function Header() {
   const { header } = useSelector(selectJasoDashboard);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const getTimeGreeting = () => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour < 12) return "Good morning";
     if (hour >= 12 && hour < 18) return "Good afternoon";
     return "Good night";
   };
+
+  const greeting = mounted ? getTimeGreeting() : "";
+  const currentTime = mounted ? new Date().toLocaleString() : "";
 
   return (
     <div className="flex w-full items-center justify-between gap-4">
@@ -27,11 +37,12 @@ export function Header() {
             <Menu className="h-5 w-5" />
           </Button>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#1b1f49]">
-            {getTimeGreeting()}, {header.greetingName}
+            {greeting ? `${greeting}, ` : ""}
+            {header.greetingName}
           </h1>
         </div>
         <div className="flex flex-wrap items-center text-xs md:text-sm text-gray-500 mt-1 gap-x-2 gap-y-1">
-          <span>{new Date().toLocaleString()}</span>
+          <span>{currentTime}</span>
           <span className="hidden md:inline-block w-1 h-1 rounded-xl bg-gray-400"></span>
           <a href="#" className="text-blue-600 font-medium hover:underline">
             {header.ctaLabel}

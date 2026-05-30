@@ -33,7 +33,6 @@ body {
   font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", Roboto, "Helvetica Neue", Arial;
   color: var(--color-foreground);
-  background-color: var(--color-background);
 }
 
 h1, h2, h3, h4, h5, h6 {
